@@ -25,4 +25,6 @@ class MemLock:
 
     def release_lock(self, key):
         if int(time.time()) - self.time[key] < (self.exp - 1):
+            self.time.pop(key)
             self.client.delete(key)
+            
