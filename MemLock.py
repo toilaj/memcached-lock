@@ -13,11 +13,7 @@
     :modify from amix the lucky stiff.
     :license: BSD
 """
-
-from __future__ import with_statement
-
 import time
-
 from contextlib import contextmanager
 from random import random
 import memcache
