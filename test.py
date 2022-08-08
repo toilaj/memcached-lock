@@ -1,32 +1,25 @@
-import MemLock
 import threading
 import time
 import random
 import memcache
+from MemLock import dist_lock
 
 MC = memcache.Client(['127.0.0.1:11211'], debug=0)
-MEMLOCK = MemLock.MemLock()
-
 
 def bk_thread(fn):
     def call_fn(*arg):
         t = threading.Thread(target=fn, args=arg)
         t.start()
         return
-
     return call_fn
 
 
 @bk_thread
 def test(i):
-    MEMLOCK.acquire_lock('0')
-    time.sleep(random.random())
-    a = MC.get('test')
-    a = a - 1
-    MC.set('test', a)
-    print('a = %r' % a)
-    MEMLOCK.release_lock('0')
-    return
+    with dist_lock(f'test_lock_{i}'):
+        MC.set(f'test_{i}', i)
+        a = MC.get(f'test_{i}')
+        print('a = %r' % a)
 
 
 def main(cnt):
@@ -34,12 +27,8 @@ def main(cnt):
     while i > 0:
         test(i)
         i = i - 1
-    time.sleep(100)
-
+    time.sleep(100) 
 
 if __name__ == "__main__":
-    share = 100
-    MC.delete("test")
-    MC.add('test', share)
+    share = 10000
     main(share)
-    print("result = %s" % MC.get('test'))
